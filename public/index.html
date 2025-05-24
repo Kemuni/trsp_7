@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>График с возможностью ставок</title>
+    <title>Казино 666</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Chart.js для отрисовки графика -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,24 +20,86 @@
             </div>
         </header>
         
-        <div class="chart-container">
-            <canvas id="priceChart"></canvas>
-        </div>
-        
-        <div class="betting-container">
-            <div class="bet-form">
-                <div class="input-group">
-                    <label for="betAmount">Сумма ставки:</label>
-                    <input type="number" id="betAmount" min="1" value="10">
-                </div>
-                
-                <div class="bet-buttons">
-                    <button id="betUp" class="bet-button up">Вверх ↑</button>
-                    <button id="betDown" class="bet-button down">Вниз ↓</button>
-                </div>
+        <div class="charts-container">
+            <div class="chart-tabs">
+                <button class="tab-button active" data-chart="normal">Нормальный (x1.9)</button>
+                <button class="tab-button" data-chart="risky">Рискованный (x3.0)</button>
+                <button class="tab-button" data-chart="extreme">Экстремальный (x5.0)</button>
             </div>
             
-            <div class="bet-status" id="betStatus"></div>
+            <div class="chart-panels">
+                <div class="chart-panel active" id="normal-panel">
+                    <div class="chart-info">
+                        <h3>Нормальный режим</h3>
+                        <p>Стандартный риск, выигрыш x1.9</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="normalChart"></canvas>
+                    </div>
+                    <div class="betting-container">
+                        <div class="bet-form">
+                            <div class="input-group">
+                                <label for="normalBetAmount">Сумма ставки:</label>
+                                <input type="number" id="normalBetAmount" min="1" value="10">
+                            </div>
+                            
+                            <div class="bet-buttons">
+                                <button id="normalBetUp" class="bet-button up" data-chart="normal">Вверх ↑</button>
+                                <button id="normalBetDown" class="bet-button down" data-chart="normal">Вниз ↓</button>
+                            </div>
+                        </div>
+                        <div class="bet-status" id="normalBetStatus"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-panel" id="risky-panel">
+                    <div class="chart-info">
+                        <h3>Рискованный режим</h3>
+                        <p>Средний риск, выигрыш x3.0</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="riskyChart"></canvas>
+                    </div>
+                    <div class="betting-container">
+                        <div class="bet-form">
+                            <div class="input-group">
+                                <label for="riskyBetAmount">Сумма ставки:</label>
+                                <input type="number" id="riskyBetAmount" min="1" value="10">
+                            </div>
+                            
+                            <div class="bet-buttons">
+                                <button id="riskyBetUp" class="bet-button up" data-chart="risky">Вверх ↑</button>
+                                <button id="riskyBetDown" class="bet-button down" data-chart="risky">Вниз ↓</button>
+                            </div>
+                        </div>
+                        <div class="bet-status" id="riskyBetStatus"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-panel" id="extreme-panel">
+                    <div class="chart-info">
+                        <h3>Экстремальный режим</h3>
+                        <p>Высокий риск, выигрыш x5.0</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="extremeChart"></canvas>
+                    </div>
+                    <div class="betting-container">
+                        <div class="bet-form">
+                            <div class="input-group">
+                                <label for="extremeBetAmount">Сумма ставки:</label>
+                                <input type="number" id="extremeBetAmount" min="1" value="10">
+                            </div>
+                            
+                            <div class="bet-buttons">
+                                <button id="extremeBetUp" class="bet-button up" data-chart="extreme">Вверх ↑</button>
+                                <button id="extremeBetDown" class="bet-button down" data-chart="extreme">Вниз ↓</button>
+                            </div>
+                        </div>
+                        <div class="bet-status" id="extremeBetStatus"></div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="history-container">

@@ -1,126 +1,203 @@
-// Connect to the server via Socket.io
 const socket = io();
 
-// DOM elements
 const balanceElement = document.getElementById('balance');
-const betAmountInput = document.getElementById('betAmount');
-const betUpButton = document.getElementById('betUp');
-const betDownButton = document.getElementById('betDown');
-const betStatusElement = document.getElementById('betStatus');
+const tabButtons = document.querySelectorAll('.tab-button');
+const chartPanels = document.querySelectorAll('.chart-panel');
 const betHistoryElement = document.getElementById('betHistory');
-const chartCanvas = document.getElementById('priceChart');
 
-// Chart configuration
-const ctx = chartCanvas.getContext('2d');
-let priceChart;
-let priceData = [];
-let timeLabels = [];
 
-// Initialize the chart
-function initChart() {
-    priceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: timeLabels,
-            datasets: [{
-                label: 'Цена',
-                data: priceData,
-                borderColor: '#3498db',
-                backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 0,
-                pointHoverRadius: 5,
-                pointHoverBackgroundColor: '#3498db',
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Время'
-                    },
-                    ticks: {
-                        maxTicksLimit: 10,
-                        callback: function(value, index, values) {
-                            if (timeLabels[index]) {
-                                const date = new Date(timeLabels[index]);
-                                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                            }
-                            return '';
-                        }
-                    }
-                },
-                y: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Цена'
-                    },
-                    beginAtZero: false
-                }
+const charts = {
+    normal: {
+        canvas: document.getElementById('normalChart'),
+        ctx: null,
+        chart: null,
+        timeLabels: [],
+        priceData: [],
+        betAmount: document.getElementById('normalBetAmount'),
+        betUpButton: document.getElementById('normalBetUp'),
+        betDownButton: document.getElementById('normalBetDown'),
+        betStatus: document.getElementById('normalBetStatus')
+    },
+    risky: {
+        canvas: document.getElementById('riskyChart'),
+        ctx: null,
+        chart: null,
+        timeLabels: [],
+        priceData: [],
+        betAmount: document.getElementById('riskyBetAmount'),
+        betUpButton: document.getElementById('riskyBetUp'),
+        betDownButton: document.getElementById('riskyBetDown'),
+        betStatus: document.getElementById('riskyBetStatus')
+    },
+    extreme: {
+        canvas: document.getElementById('extremeChart'),
+        ctx: null,
+        chart: null,
+        timeLabels: [],
+        priceData: [],
+        betAmount: document.getElementById('extremeBetAmount'),
+        betUpButton: document.getElementById('extremeBetUp'),
+        betDownButton: document.getElementById('extremeBetDown'),
+        betStatus: document.getElementById('extremeBetStatus')
+    }
+};
+
+
+let chartTypes = {};
+
+
+function initCharts() {
+    Object.keys(charts).forEach(chartType => {
+        const chartConfig = charts[chartType];
+        chartConfig.ctx = chartConfig.canvas.getContext('2d');
+        
+        chartConfig.chart = new Chart(chartConfig.ctx, {
+            type: 'bar',
+            data: {
+                labels: chartConfig.timeLabels,
+                datasets: [{
+                    label: 'Цена',
+                    data: chartConfig.priceData,
+                    borderColor: getChartColor(chartType),
+                    backgroundColor: getChartBackgroundColor(chartType),
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointHoverBackgroundColor: getChartColor(chartType),
+                }]
             },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Цена: ${context.parsed.y}`;
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Время'
                         },
-                        title: function(context) {
-                            const date = new Date(timeLabels[context[0].dataIndex]);
-                            return date.toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit', 
-                                second: '2-digit' 
-                            });
+                        ticks: {
+                            maxTicksLimit: 10,
+                            color: '#aaa',
+                            callback: function(value, index, values) {
+                                if (chartConfig.timeLabels[index]) {
+                                    const date = new Date(chartConfig.timeLabels[index]);
+                                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                                }
+                                return '';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Цена',
+                            color: '#aaa'
+                        },
+                        beginAtZero: false,
+                        ticks: {
+                            color: '#aaa'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
                         }
                     }
                 },
-                legend: {
-                    display: false
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Цена: ${context.parsed.y}`;
+                            },
+                            title: function(context) {
+                                const date = new Date(chartConfig.timeLabels[context[0].dataIndex]);
+                                return date.toLocaleTimeString([], { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit', 
+                                    second: '2-digit' 
+                                });
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                animation: {
+                    duration: 500
                 }
-            },
-            animation: {
-                duration: 500
             }
-        }
+        });
     });
 }
 
-// Update chart with new data
-function updateChart(newTimeLabel, newPrice) {
-    // Add new data
-    timeLabels.push(newTimeLabel);
-    priceData.push(newPrice);
-    
-    // Keep only the last 50 data points
-    if (timeLabels.length > 50) {
-        timeLabels.shift();
-        priceData.shift();
+
+function getChartColor(chartType) {
+    switch(chartType) {
+        case 'normal':
+            return '#3498db';
+        case 'risky':
+            return '#f39c12';
+        case 'extreme':
+            return '#e74c3c';
+        default:
+            return '#3498db';
     }
-    
-    // Update chart
-    priceChart.update();
 }
 
-// Format currency
+
+function getChartBackgroundColor(chartType) {
+    switch(chartType) {
+        case 'normal':
+            return 'rgba(52, 152, 219, 0.1)';
+        case 'risky':
+            return 'rgba(243, 156, 18, 0.1)';
+        case 'extreme':
+            return 'rgba(231, 76, 60, 0.1)';
+        default:
+            return 'rgba(52, 152, 219, 0.1)';
+    }
+}
+
+
+function updateChart(chartType, newTimeLabel, newPrice) {
+    const chartConfig = charts[chartType];
+    
+    chartConfig.timeLabels.push(newTimeLabel);
+    chartConfig.priceData.push(newPrice);
+    
+    if (chartConfig.timeLabels.length > 50) {
+        chartConfig.timeLabels.shift();
+        chartConfig.priceData.shift();
+    }
+    
+    chartConfig.chart.update();
+}
+
+
 function formatCurrency(amount) {
     return amount.toFixed(2);
 }
 
-// Add bet to history
+
 function addBetToHistory(bet) {
     const betRecord = document.createElement('div');
     betRecord.className = `bet-record ${bet.success ? 'win' : 'loss'}`;
     
     const betInfo = document.createElement('div');
     betInfo.className = 'bet-info';
-    betInfo.textContent = `Ставка ${bet.amount} на ${bet.direction === 'up' ? 'рост' : 'падение'}`;
+    
+    const chartTypeBadge = document.createElement('span');
+    chartTypeBadge.className = `chart-type-badge ${bet.chartType}`;
+    chartTypeBadge.textContent = chartTypes[bet.chartType].name;
+    
+    betInfo.appendChild(chartTypeBadge);
+    betInfo.appendChild(document.createTextNode(
+        ` Ставка ${bet.amount} на ${bet.direction === 'up' ? 'рост' : 'падение'}`
+    ));
     
     const betResult = document.createElement('div');
     betResult.className = 'bet-result';
@@ -135,126 +212,141 @@ function addBetToHistory(bet) {
     
     betHistoryElement.prepend(betRecord);
     
-    // Keep only last 10 records
     if (betHistoryElement.children.length > 10) {
         betHistoryElement.removeChild(betHistoryElement.lastChild);
     }
 }
 
-// Update balance display
+
 function updateBalance(newBalance) {
     balanceElement.textContent = formatCurrency(newBalance);
 }
 
-// Show bet status message
-function showBetStatus(message, isSuccess) {
-    betStatusElement.textContent = message;
-    betStatusElement.className = 'bet-status ' + (isSuccess ? 'success' : 'error');
+
+function showBetStatus(chartType, message, isSuccess) {
+    const statusElement = charts[chartType].betStatus;
+    statusElement.textContent = message;
+    statusElement.className = 'bet-status ' + (isSuccess ? 'success' : 'error');
     
-    // Clear message after 5 seconds
     setTimeout(() => {
-        betStatusElement.textContent = '';
-        betStatusElement.className = 'bet-status';
+        statusElement.textContent = '';
+        statusElement.className = 'bet-status';
     }, 5000);
 }
 
-// Event listeners for bet buttons
-betUpButton.addEventListener('click', () => {
-    const amount = parseFloat(betAmountInput.value);
-    if (isNaN(amount) || amount <= 0) {
-        showBetStatus('Пожалуйста, введите корректную сумму ставки', false);
-        return;
-    }
-    
-    socket.emit('placeBet', {
-        direction: 'up',
-        amount: amount
+
+tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const chartType = button.getAttribute('data-chart');
+        
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        chartPanels.forEach(panel => panel.classList.remove('active'));
+        document.getElementById(`${chartType}-panel`).classList.add('active');
     });
-    
-    // Disable buttons temporarily
-    betUpButton.disabled = true;
-    betDownButton.disabled = true;
-    
-    setTimeout(() => {
-        betUpButton.disabled = false;
-        betDownButton.disabled = false;
-    }, 1000);
 });
 
-betDownButton.addEventListener('click', () => {
-    const amount = parseFloat(betAmountInput.value);
-    if (isNaN(amount) || amount <= 0) {
-        showBetStatus('Пожалуйста, введите корректную сумму ставки', false);
-        return;
-    }
+Object.keys(charts).forEach(chartType => {
+    const chartConfig = charts[chartType];
     
-    socket.emit('placeBet', {
-        direction: 'down',
-        amount: amount
+    chartConfig.betUpButton.addEventListener('click', () => {
+        const amount = parseFloat(chartConfig.betAmount.value);
+        if (isNaN(amount) || amount <= 0) {
+            showBetStatus(chartType, 'Пожалуйста, введите корректную сумму ставки', false);
+            return;
+        }
+        
+        socket.emit('placeBet', {
+            chartType: chartType,
+            direction: 'up',
+            amount: amount
+        });
+        
+        chartConfig.betUpButton.disabled = true;
+        chartConfig.betDownButton.disabled = true;
+        
+        setTimeout(() => {
+            chartConfig.betUpButton.disabled = false;
+            chartConfig.betDownButton.disabled = false;
+        }, 1000);
     });
     
-    // Disable buttons temporarily
-    betUpButton.disabled = true;
-    betDownButton.disabled = true;
-    
-    setTimeout(() => {
-        betUpButton.disabled = false;
-        betDownButton.disabled = false;
-    }, 1000);
+    chartConfig.betDownButton.addEventListener('click', () => {
+        const amount = parseFloat(chartConfig.betAmount.value);
+        if (isNaN(amount) || amount <= 0) {
+            showBetStatus(chartType, 'Пожалуйста, введите корректную сумму ставки', false);
+            return;
+        }
+        
+        socket.emit('placeBet', {
+            chartType: chartType,
+            direction: 'down',
+            amount: amount
+        });
+        
+        chartConfig.betUpButton.disabled = true;
+        chartConfig.betDownButton.disabled = true;
+        
+        setTimeout(() => {
+            chartConfig.betUpButton.disabled = false;
+            chartConfig.betDownButton.disabled = false;
+        }, 1000);
+    });
 });
 
-// Socket.io event handlers
+
 socket.on('connect', () => {
     console.log('Connected to server');
 });
 
+
 socket.on('initialData', (data) => {
-    // Initialize price data
-    data.priceHistory.forEach(point => {
-        timeLabels.push(point.time);
-        priceData.push(point.price);
+    chartTypes = data.chartTypes;
+    
+    Object.keys(data.priceData).forEach(chartType => {
+        const chartHistory = data.priceData[chartType].priceHistory;
+        chartHistory.forEach(point => {
+            charts[chartType].timeLabels.push(point.time);
+            charts[chartType].priceData.push(point.price);
+        });
     });
     
-    // Initialize chart
-    initChart();
+    initCharts();
     
-    // Update balance
     updateBalance(data.balance);
 });
 
 socket.on('priceUpdate', (data) => {
-    updateChart(data.time, data.price);
+    updateChart(data.chartType, data.time, data.price);
 });
 
 socket.on('betResult', (data) => {
     if (data.success) {
-        showBetStatus(data.message, true);
+        showBetStatus(data.chartType || 'normal', data.message, true);
         updateBalance(data.newBalance);
     } else {
-        showBetStatus(data.message, false);
+        showBetStatus(data.chartType || 'normal', data.message, false);
     }
 });
 
 socket.on('betResolved', (data) => {
-    // Create bet record
     const bet = {
-        direction: data.previousPrice < data.currentPrice ? 'up' : 'down',
-        amount: (data.success ? data.winnings / 1.9 : data.winnings), // Calculate original bet amount
+        chartType: data.chartType,
+        direction: data.direction,
+        amount: data.betAmount,
         success: data.success,
         winnings: data.winnings
     };
     
-    // Add to history
     addBetToHistory(bet);
     
-    // Update balance
     updateBalance(data.newBalance);
     
-    // Show status message
     if (data.success) {
-        showBetStatus(`Ваша ставка выиграла! +${formatCurrency(data.winnings)}`, true);
+        showBetStatus(data.chartType, `Ваша ставка выиграла! +${formatCurrency(data.winnings)}`, true);
     } else {
-        showBetStatus('Ваша ставка проиграла', false);
+        showBetStatus(data.chartType, 'Ваша ставка проиграла', false);
     }
 });
 

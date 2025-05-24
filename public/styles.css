@@ -39,13 +39,78 @@ h1 {
     border-radius: 5px;
 }
 
+.charts-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.chart-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    padding: 10px 15px;
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-button:hover {
+    background-color: #e0e0e0;
+}
+
+.tab-button.active {
+    background-color: #3498db;
+    color: #fff;
+}
+
+.chart-panels {
+    position: relative;
+}
+
+.chart-panel {
+    display: none;
+}
+
+.chart-panel.active {
+    display: block;
+}
+
+.chart-info {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #eee;
+}
+
+.chart-info h3 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.chart-info p {
+    color: #666;
+    font-size: 14px;
+}
+
 .chart-container {
     background-color: white;
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
-    height: 400px;
+    height: 300px;
 }
 
 .betting-container {
@@ -73,12 +138,15 @@ h1 {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    color: #333;
 }
 
 .input-group input {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
+    background-color: #fff;
+    color: #333;
     border-radius: 4px;
     font-size: 16px;
 }
@@ -100,6 +168,7 @@ h1 {
 
 .bet-button:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .bet-button.up {
@@ -141,6 +210,8 @@ h1 {
     font-size: 18px;
     margin-bottom: 15px;
     color: #2c3e50;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
 }
 
 .bet-history {
@@ -167,6 +238,29 @@ h1 {
     background-color: rgba(231, 76, 60, 0.1);
 }
 
+.chart-type-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.chart-type-badge.normal {
+    background-color: #3498db;
+    color: white;
+}
+
+.chart-type-badge.risky {
+    background-color: #f39c12;
+    color: white;
+}
+
+.chart-type-badge.extreme {
+    background-color: #e74c3c;
+    color: white;
+}
+
 @media (max-width: 768px) {
     .bet-form {
         flex-direction: column;
@@ -183,5 +277,16 @@ h1 {
     
     .bet-button {
         flex: 1;
+    }
+    
+    .chart-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-button {
+        flex: 1;
+        text-align: center;
+        font-size: 14px;
+        padding: 8px;
     }
 }
